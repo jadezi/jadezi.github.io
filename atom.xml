@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>遇见BUG</title>
+  
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://localhost/"/>
+  <updated>2020-03-24T11:49:50.277Z</updated>
+  <id>http://localhost/</id>
+  
+  <author>
+    <name>jadezi</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>vsftpd</title>
+    <link href="http://localhost/article/other/3X9WRC4.html"/>
+    <id>http://localhost/article/other/3X9WRC4.html</id>
+    <published>2020-03-24T11:12:40.096Z</published>
+    <updated>2020-03-24T11:49:50.277Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="Hexo-借助vsftpd-实现上传md文件自动发布文章"><a href="#Hexo-借助vsftpd-实现上传md文件自动发布文章" class="headerlink" title="Hexo 借助vsftpd 实现上传md文件自动发布文章"></a>Hexo 借助vsftpd 实现上传md文件自动发布文章</h1><h2 id="1-常用的方式"><a href="#1-常用的方式" class="headerlink" title="1.常用的方式"></a>1.常用的方式</h2><ul><li>目前都借助Github Pages 来实现</li><li>客户端需要配置git环境</li></ul><h2 id="2-原因"><a href="#2-原因" class="headerlink" title="2.原因"></a>2.原因</h2><ul><li>因为自己有云服务器，想搭建在自己的主机上，可以随便折腾</li><li>如果搭建在自己的主机上，就需要将写好的md文件可以上传到自己的服务器上</li><li>服务器有存在之前搭建好的vsftpd 服务，所以想将两者结合在一起。</li></ul><h2 id="3-方法"><a href="#3-方法" class="headerlink" title="3.方法"></a>3.方法</h2><p>服务器运行hexo server，会自动编译发布新的文章</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure><blockquote><p>服务端开机本地编写监听vsftpd 指定文件夹的变动，同步文件到hexo 下。</p><p>按照这个逻辑写个linux 脚本</p><p>vsftpd 服务的搭建过程，这里就不做详细介绍了</p></blockquote><p>开始之前要检测系统内核是否支持inotify:</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">uname -r</span><br></pre></td></tr></table></figure><p>如果低于2.6.13 就需要重新编译内核加入inotify 的支持。</p><p>安装<code>inotifywait</code>  和 <code>rsync</code> </p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yum install inotify-tools -y</span><br><span class="line">yum install rsync -y</span><br></pre></td></tr></table></figure><p>新建文件rsync.sh文件</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch rsync.sh</span><br></pre></td></tr></table></figure><p>并建立两个日志文件，分别用来记录文件同步，hexo编译静态文件信息</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line">src=/home/vsftpd/wange/hexo/ <span class="comment">#指定要监听的目录</span></span><br><span class="line">dest=/var/www/hexo/<span class="built_in">source</span>/_posts <span class="comment">#目标文件夹</span></span><br><span class="line"></span><br><span class="line">inotifywait -mrq --timefmt <span class="string">'%Y-%H-%D %H:%M'</span> --format <span class="string">'%T %W %f'</span> -e create,delete,move <span class="variable">$&#123;src&#125;</span> |</span><br><span class="line"><span class="keyword">while</span> <span class="built_in">read</span> DATE TIME FILE;<span class="keyword">do</span></span><br><span class="line">FILEPATH=<span class="variable">$&#123;DIR&#125;</span><span class="variable">$&#123;FILE&#125;</span></span><br><span class="line">rsync -az --delete <span class="variable">$src</span> <span class="variable">$dest</span> &amp;&amp; <span class="built_in">echo</span> <span class="string">"At &#123;<span class="variable">$TIME</span>&#125; ON <span class="variable">$&#123;DATE&#125;</span>,file <span class="variable">$FILEPATH</span> WAS BACKUPED UP VIA RSYNC"</span> &gt;&gt; /var/<span class="built_in">log</span>/rsync.log</span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure><p>完工，最后测试一下，发现没有问题，ftp下指定的目录如果删除一个<code>.md</code>文章，hexo 下的source 里也会同步删除</p>]]></content>
+    
+    <summary type="html">
+    
+      自动发布文章
+    
+    </summary>
+    
+    
+    
+      <category term="Hexo" scheme="http://localhost/tags/Hexo/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>ipv6</title>
+    <link href="http://localhost/article/other/22M8H1C.html"/>
+    <id>http://localhost/article/other/22M8H1C.html</id>
+    <published>2020-03-24T08:09:39.661Z</published>
+    <updated>2020-03-24T11:51:03.805Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="IPv6"><a href="#IPv6" class="headerlink" title="IPv6"></a>IPv6</h1><h2 id="IPv6-出现原因"><a href="#IPv6-出现原因" class="headerlink" title="IPv6 出现原因"></a>IPv6 出现原因</h2>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;IPv6&quot;&gt;&lt;a href=&quot;#IPv6&quot; class=&quot;headerlink&quot; title=&quot;IPv6&quot;&gt;&lt;/a&gt;IPv6&lt;/h1&gt;&lt;h2 id=&quot;IPv6-出现原因&quot;&gt;&lt;a href=&quot;#IPv6-出现原因&quot; class=&quot;headerlink&quot; title=
+      
+    
+    </summary>
+    
+    
+    
+      <category term="IPv6" scheme="http://localhost/tags/IPv6/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>hello-world</title>
+    <link href="http://localhost/article/other/2RX80JV.html"/>
+    <id>http://localhost/article/other/2RX80JV.html</id>
+    <published>2020-03-24T07:25:25.437Z</published>
+    <updated>2020-03-24T11:35:45.307Z</updated>
+    
+    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.
+      
+    
+    </summary>
+    
+    
+    
+      <category term="Hexo" scheme="http://localhost/tags/Hexo/"/>
+    
+  </entry>
+  
+</feed>
